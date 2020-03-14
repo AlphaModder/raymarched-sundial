@@ -36,12 +36,12 @@ objdist mainDistance(vec3 position) {
 material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
     switch(obj) {
         case OBJ_GROUND:
-        	normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz);
-        	return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+            normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz);
+            return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
         case OBJ_SUNDIAL:
-        	return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
+            return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         default:
-        	return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
+            return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }
 }
 
