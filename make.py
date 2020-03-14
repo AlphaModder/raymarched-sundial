@@ -66,7 +66,6 @@ def recursive_uncat(path, lines):
                     recursive_uncat(include, included)
                     include = None
                     included = []
-                    print("include " + name)
                 else:
                     included.append(line)
             elif include == None:

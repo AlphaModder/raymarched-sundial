@@ -35,7 +35,7 @@ float norm2(vec3 vec) {
 mat3x3 rotateAround(vec3 normal) {
     vec2 v = vec2(normal.y, -normal.x);
     return pad(outerProduct(v, v) / (1.0 + normal.z)) + mat3x3(
-    	normal.z, 0.0, -normal.x,
+        normal.z, 0.0, -normal.x,
         0.0, normal.z, -normal.y,
         normal.x, normal.y, normal.z
     );
@@ -80,7 +80,7 @@ vec3 light(float r, float g, float b, float intensity) {
 struct material {
     vec3 color; // the diffuse color of the object
     float diffuse; // how much of the incoming light undergoes diffuse reflection
-	float specular; // how much of the incoming light undergoes specular reflection
+    float specular; // how much of the incoming light undergoes specular reflection
     float alpha; // the specular exponent of the material
 };
 /// END material.glsl
@@ -153,12 +153,12 @@ objdist mainDistance(vec3 position) {
 material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
     switch(obj) {
         case OBJ_GROUND:
-        	normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz);
-        	return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+            normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz);
+            return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
         case OBJ_SUNDIAL:
-        	return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
+            return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         default:
-        	return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
+            return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }
 }
 
