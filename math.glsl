@@ -29,7 +29,7 @@ float norm2(vec3 vec) {
 mat3x3 rotateAround(vec3 normal) {
     vec2 v = vec2(normal.y, -normal.x);
     return pad(outerProduct(v, v) / (1.0 + normal.z)) + mat3x3(
-    	normal.z, 0.0, -normal.x,
+        normal.z, 0.0, -normal.x,
         0.0, normal.z, -normal.y,
         normal.x, normal.y, normal.z
     );
