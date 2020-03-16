@@ -1,6 +1,5 @@
 struct material {
-    vec3 color; // the diffuse color of the object
-    float diffuse; // how much of the incoming light undergoes diffuse reflection
-    float specular; // how much of the incoming light undergoes specular reflection
+    vec3 color; // the color of the object
+    float specular; // how strong the object's specular reflection is
     float alpha; // the specular exponent of the material
 };

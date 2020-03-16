@@ -1,3 +1,4 @@
+// RAYMARCHING SETTINGS
 #define MARCH_ITERATIONS 256
 #define BOUNCES 3
 #define MIN_DIST 0.01
@@ -39,19 +40,24 @@ hit raymarch(ray r, float minT, float maxT) {
 
 // march a ray through the scene, returning a shadow factor based on whether it hits an obstacle
 float shadow(ray r, float minT, float maxT) {
-    float groundT = (GROUND_HEIGHT - r.orig.y) / r.dir.y;
-    if(groundT > 0.0) return 1.0; // TODO: Is the case where we graze the ground important enough to handle
-    
-    float shadowFactor = 1.0;
+    float res = 1.0;
     float t = minT;
-    objdist od = objdist(HUGE, -1);
-    for(int i = 0; i < MARCH_ITERATIONS && t < maxT && abs(od.dist) > EPSILON * t; ++i) {
-        od = mainDistance(r.orig + r.dir * t);
-        shadowFactor = min(shadowFactor, 0.5 + 0.5 * od.dist / (t / SHADOW_SOFTNESS));
-        t += od.dist;
-    }
+    float ph = HUGE;
     
-    return smoothstep(0.0, 1.0, shadowFactor);
+    for(int i=0; i < MARCH_ITERATIONS; i++)
+    {
+        float h = mainDistance(r.orig + t * r.dir).dist;
+        
+        // in theory this should be 2.0 * ph. 3.0 * ph makes no mathematical sense whatsoever
+        // but with 2.0 there are weird artifacts and 3.0 gets rid of them so... whatever
+        float y = h*h / (3.0 * ph); 
+        float d = sqrt(h * h - y * y);
+        res = min(res, 20.0 * d / max(EPSILON, t - y));
+        ph = h;
+        t += h;
+        if(res < -EPSILON || t > maxT) break;
+    }
+    return res;
 }
 
 // find the normal at a hit position, see http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
@@ -77,12 +83,16 @@ vec3 worldNormal(vec3 pos) {
 
 vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     vec3 toSun = sunVec();
-    ray shadowRay = ray(pos + 0.001 * normal, toSun);
+    ray shadowRay = ray(pos + 0.01 * normal, toSun); // TODO: pos + length(pos) * a * normal?
     float shadowFactor = shadow(shadowRay, MIN_DIST, MAX_DIST);
-    return
-        mat.diffuse * AMBIENT +
-        mat.diffuse * mat.color * SUNLIGHT * shadowFactor * max(0.0, dot(normal, toSun)) +
-        mat.specular * SUNLIGHT * shadowFactor * pow(max(0.0, dot(normal, normalize(view + toSun))), mat.alpha);
+    
+    vec3 incoming = SUNLIGHT * shadowFactor;
+    
+    vec3 ambient = AMBIENT;
+    vec3 diffuse = incoming * max(0.0, dot(normal, toSun));
+    vec3 specular = mat.specular * incoming * pow(max(0.0, dot(normal, normalize(view + toSun))), mat.alpha);
+    
+    return (ambient + diffuse + specular) * mat.color;
 }
 
 vec3 shadeHit(ray r, hit h) {
@@ -117,4 +127,3 @@ void mainImage(out vec4 fragColor, in vec2 pixel) {
     hit h = raymarch(r, MIN_DIST, MAX_DIST);
     fragColor = vec4(h.obj != -1 ? shadeHit(r, h) : shadeBackground(r), 1.0);
 }
-
