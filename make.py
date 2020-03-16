@@ -20,7 +20,8 @@ def cat():
         
         # handle includes
         included = {}
-        for line in range(len(readFiles[MAIN])):
+        line = 0
+        while line < len(readFiles[MAIN]):
             match = include_pattern.match(readFiles[MAIN][line])
             if match != None:
                 name = match.group(1)
@@ -34,7 +35,8 @@ def cat():
                     readFiles[MAIN][line:line+1] = ["/// BEGIN " + name + "\n"] + readFiles[name] + ["/// END " + name + "\n"]
                     included[name] = True
                 else:
-                    readFiles[MAIN][line] = "/// " + readFiles[MAIN][line] 
+                    readFiles[MAIN][line] = "/// " + readFiles[MAIN][line]
+            line += 1 
         
         writeFile.writelines(readFiles[MAIN])
 
