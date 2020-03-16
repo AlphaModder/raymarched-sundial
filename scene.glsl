@@ -24,11 +24,18 @@
 #define OBJ_NONE -1
 #define OBJ_GROUND 0
 #define OBJ_SUNDIAL 1
+#define OBJ_PYRAMID 2
 
 // the main signed distance field for the scene
 objdist mainDistance(vec3 position) {
     objdist result = objdist(HUGE, OBJ_NONE);
+    
     result = sdfUnion(result, sdfSundial(position, OBJ_SUNDIAL));
+
+    objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -30)) / 20.0, 1.0, OBJ_PYRAMID);
+    pyramid.dist *= 20.0;
+    
+    result = sdfUnion(result, pyramid);
     return result;
 }
 
@@ -40,6 +47,8 @@ material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
             return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
         case OBJ_SUNDIAL:
             return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
+        case OBJ_PYRAMID:
+            return material(vec3(0.8, 0.8, 0.3), 0.9, 0.1, 2.0);
         default:
             return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }
@@ -49,8 +58,7 @@ material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
 vec3 sunVec() {
     return normalize(vec3(cos(iTime), 0.6, sin(iTime))); // rotates in a circle in the xz plane; unrealistic
     
-    /*
-    vec2 circle = vec2(cos(iTime), sin(iTime)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
+    vec2 circle = vec2(cos(iTime / 10.0), sin(iTime / 10.0)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
     vec3 spherePos = vec3(SUN_OFFSET, circle.x, circle.y);
     float a = LATITUDE * TO_RADIANS;
     
@@ -60,5 +68,4 @@ vec3 sunVec() {
         0.0, 0.0, 1.0
     );
     return rotate * spherePos;
-    */
 }

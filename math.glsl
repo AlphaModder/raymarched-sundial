@@ -69,3 +69,15 @@ vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 normal, float sharpness) {
 vec3 light(float r, float g, float b, float intensity) {
     return 3.0 * intensity * vec3(r, g, b) / (r + g + b);
 }
+
+vec3 toCylindrical(vec3 euclidean) {
+    float p = length(euclidean.xz);
+    float a = atan(euclidean.z, euclidean.x) /* + PI */;
+    return vec3(p, a, euclidean.y);
+}
+
+vec3 fromCylindrical(vec3 cylindrical) {
+    // cylindrical.y -= PI;
+    return vec3(cylindrical.x * cos(cylindrical.y), cylindrical.z, cylindrical.x * sin(cylindrical.y));
+}
+
