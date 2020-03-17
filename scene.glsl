@@ -3,8 +3,12 @@
 #include "material.glsl"
 
 // CAMERA
-#define CAMERA_POS vec3(0, 0, 3)
-#define CAMERA_FACING vec3(0, 0, -1)
+#define ROT_RADIUS 3.0
+#define ROT_SPEED 0.1
+#define ROT_DIR 1.0
+
+#define CAMERA_POS vec3(ROT_DIR * ROT_RADIUS * sin(iTime * ROT_SPEED), 0, ROT_RADIUS * cos(iTime * ROT_SPEED))
+#define CAMERA_FACING vec3(ROT_DIR * -sin(iTime * ROT_SPEED), 0, -cos(iTime * ROT_SPEED))
 #define CAMERA_UP vec3(0, 1, 0)
 #define FOV_Y 70.0
 
@@ -48,11 +52,13 @@ material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
     switch(obj) {
         case OBJ_GROUND:
             normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz);
-            return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+            //return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+        	return material(sampleSandTriplanar(pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
         case OBJ_SUNDIAL:
             return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
-        case OBJ_PYRAMID:
-            return material(sampleTriplanar(iChannel3, pos, normal, 1.0).rgb, 0.1, 0.05, 2.0);
+        case OBJ_PYRAMID:    
+        	//return material(sampleTriplanar(iChannel3, pos, normal, 1.0).rgb, 0.1, 0.05, 2.0);
+            return material(sampleBrickTriplanar(pos, normal, 1.0).rgb, 0.1, 0.05, 2.0);
         default:
             return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }
