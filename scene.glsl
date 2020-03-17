@@ -32,10 +32,14 @@ objdist mainDistance(vec3 position) {
     
     result = sdfUnion(result, sdfSundial(position, OBJ_SUNDIAL));
 
-    objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -30)) / 20.0, 1.0, OBJ_PYRAMID);
-    pyramid.dist *= 20.0;
+    objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -30)) / 22.0, 1.0, OBJ_PYRAMID);
+    pyramid.dist *= 22.0;
+    
+    objdist dunes = sdfDunes((position - vec3(30, -1.1, -30)) / 28.0, OBJ_GROUND);
+    dunes.dist *= 28.0;
     
     result = sdfUnion(result, pyramid);
+    result = sdfUnion(result, dunes);
     return result;
 }
 
@@ -48,7 +52,7 @@ material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
         case OBJ_SUNDIAL:
             return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         case OBJ_PYRAMID:
-            return material(vec3(0.8, 0.8, 0.3), 0.9, 0.1, 2.0);
+            return material(sampleTriplanar(iChannel3, pos, normal, 1.0).rgb, 0.1, 0.05, 2.0);
         default:
             return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }

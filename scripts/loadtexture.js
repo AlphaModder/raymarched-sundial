@@ -16,6 +16,7 @@ function setTexture(index, url) {
 setTexture(0, 'https://raw.githubusercontent.com/AlphaModder/raymarched-sundial/master/textures/Sand_006_baseColor.jpg');
 setTexture(1, 'https://www.shadertoy.com/media/a/79520a3d3a0f4d3caa440802ef4362e99d54e12b1392973e4ea321840970a88a.jpg');
 setTexture(2, 'https://raw.githubusercontent.com/AlphaModder/raymarched-sundial/master/textures/Sand_006_normal.jpg');
+setTexture(3, 'https://raw.githubusercontent.com/AlphaModder/raymarched-sundial/master/textures/pyramid.jpg');
 
 for (let i = 0; i < 4; i += 1) {
   const iChannel = document.getElementById(`myUnitCanvas${i}`);

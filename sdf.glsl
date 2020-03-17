@@ -8,6 +8,12 @@ struct objdist {
 objdist sdfUnion(objdist a, objdist b) { if(a.dist < b.dist) { return a; } else { return b; } }
 objdist sdfIntersection(objdist a, objdist b) { if(a.dist > b.dist) { return a; } else { return b; } }
 objdist sdfDifference(objdist a, objdist b) { return sdfIntersection(a, objdist(-b.dist, b.obj)); }
+objdist sdfRound(objdist a, float r) { return objdist(a.dist - r, a.obj); }
+objdist sdfSmoothUnion(objdist a, objdist b, float k) {
+    float h = clamp(0.5 + 0.5*(b.dist-a.dist)/k, 0.0, 1.0);
+    float d = mix(b.dist, a.dist, h) - k*h*(1.0-h);
+    return objdist(d, a.obj);
+}
 
 // SDF primitives
 objdist sdfSphere(vec3 pos, float radius, int obj) { 
@@ -37,6 +43,15 @@ objdist sdfPyramid(vec3 pos, float height, int obj) {
     float d2 = min(q.y, -q.x * m2 - q.y * 0.5) > 0.0 ? 0.0 : min(a, b);
 
     return objdist(sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -pos.y)), obj);
+}
+
+objdist sdfDunes(vec3 pos, int obj) {
+    objdist result;
+    result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-.7, -0.05, -.6), 0.45, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-1.5, -0.05, -.6), 0.4, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-3.2, -0.05, -.6), 0.4, obj), 0.15);
+    return sdfRound(result, 0.05);
 }
 
 // sundial
