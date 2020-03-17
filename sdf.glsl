@@ -48,9 +48,9 @@ objdist sdfPyramid(vec3 pos, float height, int obj) {
 objdist sdfDunes(vec3 pos, int obj) {
     objdist result;
     result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-.7, -0.05, -.6), 0.45, obj), 0.15);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-1.5, -0.05, -.6), 0.4, obj), 0.15);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-3.2, -0.05, -.6), 0.4, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-.7, -0.05, -.6), 0.4, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-1.5, -0.05, -.6), 0.3, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-3.2, -0.05, -.6), 0.2, obj), 0.15);
     return sdfRound(result, 0.05);
 }
 
