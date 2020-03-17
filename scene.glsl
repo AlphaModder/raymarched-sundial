@@ -1,6 +1,7 @@
 #include "math.glsl"
 #include "sdf.glsl"
 #include "material.glsl"
+#include "texture.glsl"
 
 // CAMERA
 #define ROT_RADIUS 3.0
