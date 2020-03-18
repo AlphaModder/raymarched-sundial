@@ -35,8 +35,9 @@ mat3x3 rotateAround(vec3 normal) {
     );
 }
 
-vec3 decodeNormal(vec3 fromTex) {
-    return (2.0 * fromTex.xzy - 1.0) * vec3(-1, 1, 1);
+vec3 decodeNormal(vec3 fromTex, vec3 surfaceNormal) {
+    vec3 tangentSpace = (2.0 * fromTex - 1.0) * vec3(-1, 1, 1);
+    return rotateAround(surfaceNormal) * tangentSpace;
 }
 
 // sample from a cosine distribution in the upper unit hemisphere using Malley's method
