@@ -1,8 +1,8 @@
 // RAYMARCHING SETTINGS
-#define MARCH_ITERATIONS 256
+#define MARCH_ITERATIONS 307
 #define BOUNCES 3
 #define MIN_DIST 0.01
-#define MAX_DIST 100.0
+#define MAX_DIST 80.0
 
 #include "math.glsl"
 #include "material.glsl"
@@ -22,20 +22,14 @@ struct hit {
 // march a ray through the scene, returning whatever it hits
 hit raymarch(ray r, float minT, float maxT) {
     float t = minT;
-    float groundT = (GROUND_HEIGHT - r.orig.y) / r.dir.y;
-    if(groundT > 0.0 && groundT < maxT) maxT = groundT;
-    
+
     for(int i = 0; i < MARCH_ITERATIONS && t < maxT; ++i) {
         objdist od = mainDistance(r.orig + r.dir * t);
         if(abs(od.dist) < EPSILON * t) { return hit(t, od.obj); }
         t += od.dist;
     }
-    
-    if(groundT > 0.0) { 
-        return hit(groundT, OBJ_GROUND);
-    } else {
-        return hit(HUGE, OBJ_NONE);
-    }
+
+    return hit(HUGE, OBJ_NONE);
 }
 
 // march a ray through the scene, returning a shadow factor based on whether it hits an obstacle

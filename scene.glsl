@@ -22,7 +22,7 @@
 // SCENE: OBJECTS
 #define GROUND_HEIGHT -1.0
 #define OBJ_NONE -1
-#define OBJ_GROUND 0
+#define OBJ_DESERT 0
 #define OBJ_SUNDIAL 1
 #define OBJ_PYRAMID 2
 
@@ -34,9 +34,8 @@ objdist mainDistance(vec3 position) {
 
     objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -30)) / 22.0, 1.0, OBJ_PYRAMID);
     pyramid.dist *= 22.0;
-    
-    objdist dunes = sdfDunes((position - vec3(30, -1.1, -30)) / 28.0, OBJ_GROUND);
-    dunes.dist *= 28.0;
+
+    objdist dunes = sdfDesert(position, OBJ_DESERT);
     
     result = sdfUnion(result, pyramid);
     result = sdfUnion(result, dunes);
@@ -44,15 +43,15 @@ objdist mainDistance(vec3 position) {
 }
 
 // gets the material properties at a point based on object id. can alter the normal
-material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
+material materialForPoint(vec3 view, vec3 pos, vec3 dPdx, vec3 dPdy, inout vec3 normal, int obj) {
     switch(obj) {
-        case OBJ_GROUND:
-            normal = decodeNormal(sampleTriplanar(iChannel2, pos, normal, 1.0).xyz, normal);
-            return material(sampleTriplanar(iChannel0, pos, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+        case OBJ_DESERT:
+            normal = decodeNormal(sampleTriplanar(iChannel2, pos, dPdx, dPdy, normal, 1.0).xyz, normal);
+            return material(sampleTriplanar(iChannel0, pos, dPdx, dPdy, normal, 1.0).rgb, 0.9, 0.1, 4.0);
         case OBJ_SUNDIAL:
-            return material(sampleTriplanar(iChannel1, pos, normal, 1.0).rgb, 0.4, 0.6, 128.0);
+            return material(sampleTriplanar(iChannel1, pos, dPdx, dPdy, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         case OBJ_PYRAMID:
-            return material(sampleTriplanar(iChannel3, pos, normal, 1.0).rgb, 0.1, 0.05, 2.0);
+            return material(sampleTriplanar(iChannel3, pos, dPdx, dPdy, normal, 1.0).rgb, 0.1, 0.05, 2.0);
         default:
             return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
     }
@@ -60,9 +59,9 @@ material materialForPoint(vec3 view, vec3 pos, inout vec3 normal, int obj) {
 
 // the unit vector pointing towards the sun
 vec3 sunVec() {
-    return normalize(vec3(cos(iTime), 0.6, sin(iTime))); // rotates in a circle in the xz plane; unrealistic
+    // return normalize(vec3(cos(iTime), 0.6, sin(iTime))); // rotates in a circle in the xz plane; unrealistic
     
-    vec2 circle = vec2(cos(iTime / 10.0), sin(iTime / 10.0)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
+    vec2 circle = vec2(cos(iTime / 8.0), sin(iTime / 8.0)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
     vec3 spherePos = vec3(SUN_OFFSET, circle.x, circle.y);
     float a = LATITUDE * TO_RADIANS;
     
