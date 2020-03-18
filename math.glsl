@@ -54,12 +54,11 @@ vec3 sampleCone(float coneAngle) {
     return normalize(vec3(disk, 1.0));
 }
 
-// TODO: proper texture derivatives
-vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 normal, float sharpness) {
+vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 dPdx, vec3 dPdy, vec3 normal, float sharpness) {
     mat3x4 planes = mat3x4(
-        texture(map, pos.yz),
-        texture(map, pos.xz),
-        texture(map, pos.xy)
+        textureGrad(map, pos.yz, dPdx.yz, dPdy.yz),
+        textureGrad(map, pos.zx, dPdx.zx, dPdy.zx),
+        textureGrad(map, pos.xy, dPdx.xy, dPdy.xy)
     );
     
     vec3 blend = pow(abs(normal), vec3(sharpness));

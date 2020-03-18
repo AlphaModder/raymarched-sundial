@@ -95,12 +95,15 @@ vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     return (ambient + diffuse + specular) * mat.color;
 }
 
-vec3 shadeHit(ray r, hit h) {
+vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
     vec3 toCamera = -r.dir;
     vec3 pos = r.orig + r.dir * h.t;
-    vec3 normal = h.obj == OBJ_GROUND ? vec3(0, 1, 0) : worldNormal(pos); // ground is raytraced not marched, special case
+    vec3 normal = worldNormal(pos);
+
+    vec3 dPdx = h.t * (rdx * dot(r.dir, normal) / dot(rdx, normal) - r.dir);
+    vec3 dPdy = h.t * (rdy * dot(r.dir, normal) / dot(rdy, normal) - r.dir);
     
-    material mat = materialForPoint(toCamera, pos, normal, h.obj);
+    material mat = materialForPoint(toCamera, pos, dPdx, dPdy, normal, h.obj);
     return directLighting(mat, toCamera, pos, normal);
 }
 
@@ -121,9 +124,9 @@ ray rayThrough(vec2 pixel) {
 
 void mainImage(out vec4 fragColor, in vec2 pixel) {
     ray r = rayThrough(pixel);
-    ray rdx = rayThrough(pixel + vec2(1, 0));
-    ray rdy = rayThrough(pixel + vec2(0, 1));
+    vec3 rdx = rayThrough(pixel + vec2(1, 0)).dir;
+    vec3 rdy = rayThrough(pixel + vec2(0, 1)).dir;
     
     hit h = raymarch(r, MIN_DIST, MAX_DIST);
-    fragColor = vec4(h.obj != -1 ? shadeHit(r, h) : shadeBackground(r), 1.0);
+    fragColor = vec4(h.obj != -1 ? shadeHit(r, rdx, rdy, h) : shadeBackground(r), 1.0);
 }
