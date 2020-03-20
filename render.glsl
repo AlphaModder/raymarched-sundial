@@ -93,8 +93,6 @@ vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     
     vec3 incoming = SUNLIGHT * shadowFactor;
     
-    // return vec3(ao(pos, normal, 1.0, 1.2));
-    
     vec3 ambient = AMBIENT * ao(pos, normal, 1.0, 1.2);
     vec3 diffuse = incoming * max(0.0, dot(normal, toSun));
     vec3 specular = mat.specular * incoming * pow(max(0.0, dot(normal, normalize(view + toSun))), mat.alpha);
