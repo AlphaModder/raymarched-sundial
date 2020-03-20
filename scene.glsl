@@ -18,7 +18,9 @@
 #define SUN_OFFSET 0.2
 #define SUN_SPEED 0.125
 #define SUN_COLOR vec3(2.0, 1.6, 1.0)
-#define SKY_COLOR vec3(0.5, 0.7, 0.9)
+#define DAY_SKY_COLOR vec3(0.5, 0.7, 0.9)
+#define NIGHT_SKY_COLOR vec3(0.05, 0.08, 0.15)
+//#define SKY_COLOR vec3(0.5, 0.7, 0.9)
 
 // ENVIRONMENT: LIGHTING
 #define SUNLIGHT light(0.7, 0.7, 0.6, 1.5)

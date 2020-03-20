@@ -114,11 +114,24 @@ vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
     return directLighting(mat, toCamera, pos, normal);
 }
 
+// Calculate sky color based on sun height
+vec3 skyColor(float altitude) {
+    if (altitude > 0.25) {
+     	return DAY_SKY_COLOR;   
+    }
+    if (altitude < -0.25) {
+    	return NIGHT_SKY_COLOR;
+    }
+    altitude = (altitude + 0.25) * 2.0;
+    return (altitude) * DAY_SKY_COLOR + (1.0 - altitude) * NIGHT_SKY_COLOR;
+}
+
 // shade rays that never hit an object
 vec3 shadeBackground(ray r) {
-    float sunness = max(0.0, dot(r.dir, sunVec()));
+    vec3 sun = sunVec();
+    float sunness = max(0.0, dot(r.dir, sun));
     float sunFactor = pow(sunness, 256.0) + 0.2 * pow(sunness, 4.0);
-    return vec3(SKY_COLOR + SUN_COLOR * sunFactor);
+    return vec3(skyColor(sun.y) + SUN_COLOR * sunFactor);
 }
 
 // calculate the worldspace ray through a pixel in screenspace
