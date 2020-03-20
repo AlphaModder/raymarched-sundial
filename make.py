@@ -82,8 +82,12 @@ def recursive_uncat(path, lines):
 
 
 if __name__ == "__main__":
-    arg = sys.argv[1]
+    arg = None
+    if len(sys.argv) == 2:
+        arg = sys.argv[1]
     if arg == "cat":
         cat()
     elif arg == "uncat":
         uncat()
+    else:
+        print("Usage: python3 make.py [cat|uncat]")

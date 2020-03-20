@@ -19,7 +19,7 @@ vec4 brickTexture(vec2 uv){
     vec2 value = abs(uv - vec2(0.5)) - vec2(edgeWidth * 0.5);
     float edge = float(min(value.x, value.y));
     
-    float rand = pow(pseudoRandom(uv.xy), 2.0);
+    float rand = pow(random(uv.xy), 2.0);
     vec4 brick = (edge) * light + (1.0 - edge) * dark;
     return (light * rand + brick * (1.0 - rand)) * BRICK_GRAIN + brick * (1.0 - BRICK_GRAIN);
 }

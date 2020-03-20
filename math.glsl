@@ -35,11 +35,6 @@ float fbm(vec2 pos) {
     return value;
 }
 
-// Source: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
-float pseudoRandom(vec2 seed){
-    return fract(sin(dot(seed.xy, vec2(12.9898, 78.233))) * 43758.5453);
-}
-
 // pads a 2x2 matrix with zeroes to make it 3x3.
 mat3x3 pad(mat2x2 mat) {
     return mat3x3(
