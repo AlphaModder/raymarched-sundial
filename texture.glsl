@@ -20,8 +20,8 @@ vec4 sampleSandTriplanar(vec3 pos, vec3 normal, float sharpness) {
 
 vec4 brickTexture(vec2 uv){
     
-    vec4 light = vec4(1.00, 0.93, 0.80, 1.0);
-    vec4 dark = vec4(0.50, 0.40, 0.25, 1.0);
+    vec4 light = vec4(0.95, 0.90, 0.75, 1.0);
+    vec4 dark = vec4(0.60, 0.50, 0.30, 1.0);
     
     vec2 div = vec2(2, 3);
     float edgeWidth = 0.2;
@@ -38,7 +38,7 @@ vec4 brickTexture(vec2 uv){
     return (light * rand + brick * (1.0 - rand)) * 0.25 + brick * 0.75;
 }
 
-vec4 sampleBrickTriplanar(vec3 pos, vec3 normal, float sharpness) {
+vec4 sampleBrickBiplanar(vec3 pos, vec3 normal, float sharpness) {
     mat2x4 planes = mat2x4(
         brickTexture(pos.zy),
         brickTexture(pos.xy)
