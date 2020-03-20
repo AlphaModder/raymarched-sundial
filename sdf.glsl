@@ -49,6 +49,17 @@ objdist sdfPyramid(vec3 pos, float height, int obj) {
     return objdist(sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -pos.y)), obj);
 }
 
+objdist sdfCone(vec3 pos, float slope, int obj) {
+    return objdist(sqrt(pow(pos.x * slope, 2.0) + pow(pos.z * slope, 2.0)) + pos.y, obj);
+}
+
+objdist sdfRoundCone(vec3 pos, float slope, int obj) {
+    objdist cone = sdfCone(pos, slope, obj);
+    objdist halfSpace = objdist(pos.y + 0.02, obj);
+    objdist sphere = sdfSphere(pos + vec3(0, 0.02, 0), 0.012, obj);
+    return sdfUnion(sdfIntersection(halfSpace, cone), sphere);
+}
+
 objdist sdfBox(vec3 pos, vec3 size, int obj)
 {
   vec3 q = abs(pos) - size;
@@ -56,11 +67,14 @@ objdist sdfBox(vec3 pos, vec3 size, int obj)
 }
 
 objdist sdfDunes(vec3 pos, int obj) {
-    objdist result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
-    result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-.7, -0.05, -.6), 0.4, obj), 0.15);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-1.5, -0.05, -.6), 0.3, obj), 0.15);
-    result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-3.2, -0.05, -.6), 0.2, obj), 0.15);
+    objdist result = sdfRoundCone(pos - vec3(0, 0.3, 0), 0.5, obj);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-.7, 0.4, -.6), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-1.5, 0.3, -.6), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-3.2, 0.2, -.6), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-3.7, 0.3, 0.1), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-3.3, 0.4, 1.4), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(-1.5, 0.5, 2.8), 0.5, obj), 0.15);
+    result = sdfSmoothUnion(result, sdfRoundCone(pos - vec3(0.8, 0.2, 0.6), 0.5, obj), 0.15);
     return sdfRound(result, 0.05);
 }
 
@@ -74,7 +88,7 @@ objdist sdfDesert(vec3 pos, int obj) {
     objdist sundialSand = sdfCylinder(pos - vec3(0, -1, 0), 1.0, 0.03, obj);
     // objdist pyramidSand = sdfBox(pos - vec3(-16, -1.1, -30), vec3(10.5, 0.3, 10.5);
     
-    result = sdfSmoothUnion(result, dunes, 0.15);
+    result = sdfSmoothUnion(result, dunes, 4.0);
     float a = toCylindrical(pos).y;
     float sandySmooth = 0.2 + 0.033 * (
         sin((15.3 * a) - 4.1) + cos((7.08 * a) - 1.4) * sin((13.9 * a) - 3.6) // maybe use an actual noise function instead of this bs
