@@ -1,8 +1,9 @@
 // RAYMARCHING SETTINGS
-#define MARCH_ITERATIONS 256
+#define MARCH_ITERATIONS 307
 #define BOUNCES 3
 #define MIN_DIST 0.01
-#define MAX_DIST 100.0
+#define MAX_DIST 80.0
+#define AO_SAMPLES 32
 
 #include "math.glsl"
 #include "material.glsl"
@@ -20,28 +21,22 @@ struct hit {
 };
 
 // march a ray through the scene, returning whatever it hits
-hit raymarch(ray r, float minT, float maxT) {
-    float t = minT;
-    float groundT = (GROUND_HEIGHT - r.orig.y) / r.dir.y;
-    if(groundT > 0.0 && groundT < maxT) maxT = groundT;
-    
-    for(int i = 0; i < MARCH_ITERATIONS && t < maxT; ++i) {
+hit raymarch(ray r) {
+    float t = MIN_DIST;
+
+    for(int i = 0; i < MARCH_ITERATIONS && t < MAX_DIST; ++i) {
         objdist od = mainDistance(r.orig + r.dir * t);
         if(abs(od.dist) < EPSILON * t) { return hit(t, od.obj); }
         t += od.dist;
     }
-    
-    if(groundT > 0.0) { 
-        return hit(groundT, OBJ_GROUND);
-    } else {
-        return hit(HUGE, OBJ_NONE);
-    }
+
+    return hit(HUGE, OBJ_NONE);
 }
 
 // march a ray through the scene, returning a shadow factor based on whether it hits an obstacle
-float shadow(ray r, float minT, float maxT) {
+float shadow(ray r) {
     float res = 1.0;
-    float t = minT;
+    float t = MIN_DIST;
     float ph = HUGE;
     
     for(int i=0; i < MARCH_ITERATIONS; i++)
@@ -55,9 +50,19 @@ float shadow(ray r, float minT, float maxT) {
         res = min(res, 20.0 * d / max(EPSILON, t - y));
         ph = h;
         t += h;
-        if(res < -EPSILON || t > maxT) break;
+        if(res < -EPSILON || t > MAX_DIST) break;
     }
     return res;
+}
+
+float ao(vec3 pos, vec3 normal, float maxDist, float falloff) {
+    float ao = 0.0;
+    for(int i = 0; i < AO_SAMPLES; ++i) {
+        float dist = maxDist * random(pos.xy + vec2(pos.z, i));
+        vec3 sampleOffset = dist * normalize(rotateAround(normal) * (vec3(0, 0, 1) + sampleCosine(pos.yz + vec2(i, pos.x))));
+        ao += (dist - max(mainDistance(pos + sampleOffset).dist, 0.0)) / maxDist * falloff;
+    }
+    return clamp(1.0 - ao / float(AO_SAMPLES), 0.0, 1.0);
 }
 
 // find the normal at a hit position, see http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
@@ -84,23 +89,28 @@ vec3 worldNormal(vec3 pos) {
 vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     vec3 toSun = sunVec();
     ray shadowRay = ray(pos + 0.01 * normal, toSun); // TODO: pos + length(pos) * a * normal?
-    float shadowFactor = shadow(shadowRay, MIN_DIST, MAX_DIST);
+    float shadowFactor = shadow(shadowRay);
     
     vec3 incoming = SUNLIGHT * shadowFactor;
     
-    vec3 ambient = AMBIENT;
+    // return vec3(ao(pos, normal, 1.0, 1.2));
+    
+    vec3 ambient = AMBIENT * ao(pos, normal, 1.0, 1.2);
     vec3 diffuse = incoming * max(0.0, dot(normal, toSun));
     vec3 specular = mat.specular * incoming * pow(max(0.0, dot(normal, normalize(view + toSun))), mat.alpha);
     
     return (ambient + diffuse + specular) * mat.color;
 }
 
-vec3 shadeHit(ray r, hit h) {
+vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
     vec3 toCamera = -r.dir;
     vec3 pos = r.orig + r.dir * h.t;
-    vec3 normal = h.obj == OBJ_GROUND ? vec3(0, 1, 0) : worldNormal(pos); // ground is raytraced not marched, special case
+    vec3 normal = worldNormal(pos);
+
+    vec3 dPdx = h.t * (rdx * dot(r.dir, normal) / dot(rdx, normal) - r.dir);
+    vec3 dPdy = h.t * (rdy * dot(r.dir, normal) / dot(rdy, normal) - r.dir);
     
-    material mat = materialForPoint(toCamera, pos, normal, h.obj);
+    material mat = materialForPoint(toCamera, pos, dPdx, dPdy, normal, h.obj);
     return directLighting(mat, toCamera, pos, normal);
 }
 
@@ -121,9 +131,9 @@ ray rayThrough(vec2 pixel) {
 
 void mainImage(out vec4 fragColor, in vec2 pixel) {
     ray r = rayThrough(pixel);
-    ray rdx = rayThrough(pixel + vec2(1, 0));
-    ray rdy = rayThrough(pixel + vec2(0, 1));
+    vec3 rdx = rayThrough(pixel + vec2(1, 0)).dir;
+    vec3 rdy = rayThrough(pixel + vec2(0, 1)).dir;
     
-    hit h = raymarch(r, MIN_DIST, MAX_DIST);
-    fragColor = vec4(h.obj != -1 ? shadeHit(r, h) : shadeBackground(r), 1.0);
+    hit h = raymarch(r);
+    fragColor = vec4(h.obj != -1 ? shadeHit(r, rdx, rdy, h) : shadeBackground(r), 1.0);
 }

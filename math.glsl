@@ -4,11 +4,35 @@
 #define HUGE 1000000.0
 #define EPSILON 0.0001
 #define ZERO min(iFrame,0)
+#define FBM_OCTAVES 6
 
-// TODO: Use an LCG or something
-float random() {
-    return 4.0; // chosen by fair dice roll.
-                // guaranteed to be random.
+// Source: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
+float random(vec2 seed) {
+    return fract(sin(dot(seed.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float fbm(vec2 pos) {
+    float value = 0.0;
+    float amplitude = 0.5;
+
+    for (int i = 0; i < FBM_OCTAVES; i++) {
+        vec2 tile = floor(pos);
+    	vec2 interp = smoothstep(0.0, 1.0, fract(pos));
+        
+        float a = random(tile);
+        float b = random(tile + vec2(1, 0));
+        float c = random(tile + vec2(0, 1));
+        float d = random(tile + vec2(1, 1));
+        
+        float l = mix(a, b, interp.x);
+        float h = mix(c, d, interp.x);
+        value += amplitude * mix(l, h, interp.y);
+            
+        pos *= 2.0;
+        amplitude *= 0.5;
+    }
+    
+    return value;
 }
 
 // Source: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
@@ -40,30 +64,30 @@ mat3x3 rotateAround(vec3 normal) {
     );
 }
 
-vec3 decodeNormal(vec3 fromTex) {
-    return (2.0 * fromTex.xzy - 1.0) * vec3(-1, 1, 1);
+vec3 decodeNormal(vec3 fromTex, vec3 surfaceNormal) {
+    vec3 tangentSpace = (2.0 * fromTex - 1.0) * vec3(-1, 1, 1);
+    return rotateAround(surfaceNormal) * tangentSpace;
 }
 
 // sample from a cosine distribution in the upper unit hemisphere using Malley's method
-vec3 sampleCosine() {
-    float angle = random() * 2.0 * PI;
-    float rand = random();
+vec3 sampleCosine(vec2 seed) {
+    float angle = random(seed) * 2.0 * PI;
+    float rand = random(seed + 1.0);
     return vec3(rand * cos(angle), rand * sin(angle), sqrt(1.0 - rand * rand));
 }
 
 // sample unit vectors from a cone of the given angle
-vec3 sampleCone(float coneAngle) {
-    float angle = random() * 2.0 * PI;
-    vec2 disk = random() * vec2(cos(angle), sin(angle)) * tan(coneAngle);
+vec3 sampleCone(float coneAngle, vec2 seed) {
+    float angle = random(seed) * 2.0 * PI;
+    vec2 disk = random(seed + 1.0) * vec2(cos(angle), sin(angle)) * tan(coneAngle);
     return normalize(vec3(disk, 1.0));
 }
 
-// TODO: proper texture derivatives
-vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 normal, float sharpness) {
+vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 dPdx, vec3 dPdy, vec3 normal, float sharpness) {
     mat3x4 planes = mat3x4(
-        texture(map, pos.yz),
-        texture(map, pos.xz),
-        texture(map, pos.xy)
+        textureGrad(map, pos.yz, dPdx.yz, dPdy.yz),
+        textureGrad(map, pos.zx, dPdx.zx, dPdy.zx),
+        textureGrad(map, pos.xy, dPdx.xy, dPdy.xy)
     );
     
     vec3 blend = pow(abs(normal), vec3(sharpness));
@@ -84,5 +108,12 @@ vec3 toCylindrical(vec3 euclidean) {
 vec3 fromCylindrical(vec3 cylindrical) {
     // cylindrical.y -= PI;
     return vec3(cylindrical.x * cos(cylindrical.y), cylindrical.z, cylindrical.x * sin(cylindrical.y));
+}
+
+vec2 gradNoise(vec2 pos) {
+    return normalize(vec2(
+        fbm(pos + vec2(EPSILON, 0)) - fbm(pos + vec2(-EPSILON, 0)),
+        fbm(pos + vec2(0, EPSILON)) - fbm(pos + vec2(0, -EPSILON))
+    ));
 }
 

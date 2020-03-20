@@ -20,6 +20,10 @@ objdist sdfSphere(vec3 pos, float radius, int obj) {
     return objdist(length(pos) - radius, obj); 
 }	
 
+objdist sdfPlane(vec3 pos, int obj) {
+    return objdist(pos.y, obj);
+}
+
 objdist sdfCylinder(vec3 pos, float height, float radius, int obj)
 {
     vec2 d = abs(vec2(length(pos.xz), pos.y)) - vec2(height, radius);
@@ -45,8 +49,14 @@ objdist sdfPyramid(vec3 pos, float height, int obj) {
     return objdist(sqrt((d2 + q.z * q.z) / m2) * sign(max(q.z, -pos.y)), obj);
 }
 
+objdist sdfBox(vec3 pos, vec3 size, int obj)
+{
+  vec3 q = abs(pos) - size;
+  return objdist(length(max(q, 0.0)) + min(max(q.x,max(q.y, q.z)), 0.0), obj);
+}
+
 objdist sdfDunes(vec3 pos, int obj) {
-    objdist result;
+    objdist result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
     result = sdfPyramid(pos - vec3(0, -0.05, 0), 0.5, obj);
     result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-.7, -0.05, -.6), 0.4, obj), 0.15);
     result = sdfSmoothUnion(result, sdfPyramid(pos - vec3(-1.5, -0.05, -.6), 0.3, obj), 0.15);
@@ -54,17 +64,38 @@ objdist sdfDunes(vec3 pos, int obj) {
     return sdfRound(result, 0.05);
 }
 
+// everything made of sand
+objdist sdfDesert(vec3 pos, int obj) {
+    objdist result = sdfPlane(pos - vec3(0, -1, 0), obj);
+    
+    objdist dunes = sdfDunes((pos - vec3(30, -1.1, -30)) / 28.0, obj);
+    dunes.dist *= 28.0;
+    
+    objdist sundialSand = sdfCylinder(pos - vec3(0, -1, 0), 1.0, 0.03, obj);
+    // objdist pyramidSand = sdfBox(pos - vec3(-16, -1.1, -30), vec3(10.5, 0.3, 10.5);
+    
+    result = sdfSmoothUnion(result, dunes, 0.15);
+    float a = toCylindrical(pos).y;
+    float sandySmooth = 0.2 + 0.033 * (
+        sin((15.3 * a) - 4.1) + cos((7.08 * a) - 1.4) * sin((13.9 * a) - 3.6) // maybe use an actual noise function instead of this bs
+    );
+    result = sdfSmoothUnion(result, sundialSand, sandySmooth);
+    
+    return sdfRound(result, 0.05);
+}
+
 // sundial
 objdist sdfSundial(vec3 pos, int obj) {
     objdist result;
-    result = objdist(max(abs(pos.z) - 0.1, max(pos.x + pos.y, -pos.x)), obj); // gnomon bounds
-    result = sdfDifference(result, sdfCylinder((pos - vec3(-0.5, -1.1, 0)).xzy, 1.0, 0.4, obj)); // cylinder cut
-    result = sdfUnion(result, sdfCylinder(pos - vec3(0, -1, 0), 1.0, 0.1, obj)); // dial
+    result = objdist(max(abs(pos.z) - 0.1, max(pos.x + pos.y - 0.1, -pos.x)), obj); // gnomon bounds
+    result = sdfDifference(result, sdfCylinder((pos - vec3(-0.5, -1.0, 0)).xzy, 1.0, 0.4, obj)); // cylinder cut
+    result = sdfUnion(result, sdfCylinder(pos - vec3(0, -1, 0), 1.0, 0.2, obj)); // dial
 
     vec3 cylindrical = toCylindrical(pos);
     cylindrical.y = mod(cylindrical.y + PI / 12.0, PI / 6.0) - PI / 12.0;
+    
     vec3 newPos = fromCylindrical(cylindrical);
     
-    result = sdfUnion(result, sdfSphere(newPos - vec3(0.85, -0.9, 0.0), 0.1, obj));
+    result = sdfUnion(result, sdfSphere(newPos - vec3(0.85, -0.8, 0.0), 0.08, obj));
     return result;
 }

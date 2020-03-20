@@ -33,16 +33,17 @@ vec4 brickTexture(vec2 uv){
     vec2 value = abs(uv - vec2(0.5)) - vec2(edgeWidth * 0.5);
     float edge = float(min(value.x, value.y));
     
-    return (edge) * light + (1.0 - edge) * dark;
+    float rand = pow(pseudoRandom(uv.xy), 2.0);
+    vec4 brick = (edge) * light + (1.0 - edge) * dark;
+    return (light * rand + brick * (1.0 - rand)) * 0.25 + brick * 0.75;
 }
 
 vec4 sampleBrickTriplanar(vec3 pos, vec3 normal, float sharpness) {
-    mat3x4 planes = mat3x4(
-        brickTexture(pos.yz),
-        brickTexture(pos.xz),
+    mat2x4 planes = mat2x4(
+        brickTexture(pos.zy),
         brickTexture(pos.xy)
     );
-    vec3 blend = pow(abs(normal), vec3(sharpness));
-    blend /= blend.x + blend.y + blend.z;
+    vec2 blend = pow(abs(normal.xz), vec2(sharpness));
+    blend /= blend.x + blend.y;
     return planes * blend;
 }
