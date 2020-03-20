@@ -1,29 +1,15 @@
 #include "math.glsl"
-
-vec4 sandTexture(vec2 uv) {
-    vec4 alpha = vec4(1.00, 0.94, 0.88, 1.0);
-    vec4 beta = vec4(0.80, 0.70, 0.60, 1.0);
-    float r = pow(pseudoRandom(uv.xy), 5.0);
- 	return alpha * (1.0 - r) + beta * (r);   
-}
-
-vec4 sampleSandTriplanar(vec3 pos, vec3 normal, float sharpness) {
-    mat3x4 planes = mat3x4(
-        sandTexture(pos.yz),
-        sandTexture(pos.xz),
-        sandTexture(pos.xy)
-    );
-    vec3 blend = pow(abs(normal), vec3(sharpness));
-    blend /= blend.x + blend.y + blend.z;
-    return planes * blend;
-}
+#define BRICK_CONTRAST 0.12
+#define BRICK_GRAIN 0.20
 
 vec4 brickTexture(vec2 uv){
     
-    vec4 light = vec4(0.95, 0.90, 0.75, 1.0);
-    vec4 dark = vec4(0.60, 0.50, 0.30, 1.0);
+    vec4 color = vec4(0.78, 0.65, 0.48, 1.0);
+    vec4 diff = vec4(vec3(BRICK_CONTRAST), 1.0);
+    vec4 dark = color - diff;
+    vec4 light = color + diff;
     
-    vec2 div = vec2(2, 3);
+    vec2 div = vec2(1.5, 2);
     float edgeWidth = 0.2;
     
     vec2 orinal_uv = uv;
@@ -35,7 +21,7 @@ vec4 brickTexture(vec2 uv){
     
     float rand = pow(pseudoRandom(uv.xy), 2.0);
     vec4 brick = (edge) * light + (1.0 - edge) * dark;
-    return (light * rand + brick * (1.0 - rand)) * 0.25 + brick * 0.75;
+    return (light * rand + brick * (1.0 - rand)) * BRICK_GRAIN + brick * (1.0 - BRICK_GRAIN);
 }
 
 vec4 sampleBrickBiplanar(vec3 pos, vec3 normal, float sharpness) {
