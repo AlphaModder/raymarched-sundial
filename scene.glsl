@@ -1,16 +1,22 @@
 #include "math.glsl"
 #include "sdf.glsl"
 #include "material.glsl"
+#include "texture.glsl"
 
 // CAMERA
-#define CAMERA_POS vec3(0, 0, 3)
-#define CAMERA_FACING vec3(0, 0, -1)
+#define ROT_RADIUS 3.0
+#define ROT_SPEED 0.1
+#define ROT_DIR 1.0
+
+#define CAMERA_POS vec3(ROT_DIR * ROT_RADIUS * sin(iTime * ROT_SPEED), 0, ROT_RADIUS * cos(iTime * ROT_SPEED))
+#define CAMERA_FACING vec3(ROT_DIR * -sin(iTime * ROT_SPEED), 0, -cos(iTime * ROT_SPEED))
 #define CAMERA_UP vec3(0, 1, 0)
 #define FOV_Y 70.0
 
 // ENVIRONMENT: SKY
 #define LATITUDE -20.0
 #define SUN_OFFSET 0.2
+#define SUN_SPEED 0.125
 #define SUN_COLOR vec3(2.0, 1.6, 1.0)
 #define SKY_COLOR vec3(0.5, 0.7, 0.9)
 
@@ -32,7 +38,7 @@ objdist mainDistance(vec3 position) {
     
     result = sdfUnion(result, sdfSundial(position, OBJ_SUNDIAL));
 
-    objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -30)) / 22.0, 1.0, OBJ_PYRAMID);
+    objdist pyramid = sdfPyramid((position - vec3(-16, -1.1, -20)) / 22.0, 1.0, OBJ_PYRAMID);
     pyramid.dist *= 22.0;
 
     objdist dunes = sdfDesert(position, OBJ_DESERT);
@@ -52,7 +58,7 @@ material materialForPoint(vec3 view, vec3 pos, vec3 dPdx, vec3 dPdy, inout vec3 
         case OBJ_SUNDIAL:
             return material(sampleTriplanar(iChannel1, pos, dPdx, dPdy, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         case OBJ_PYRAMID:
-        	color = sampleTriplanar(iChannel3, pos, dPdx, dPdy, normal, 1.0).rgb;
+        	color = sampleBrickBiplanar(pos, normal, 1.0).rgb;
         	float bumpFactor = smoothstep(0.0, 1.0, 1.0 - dot(color, color));
         	vec2 uv = (transpose(rotateAround(normal)) * pos).xy;
         	normal = rotateAround(normal) * mix(vec3(0, 0, 1), abs(vec3(gradNoise(uv), 0.0)), bumpFactor);
@@ -66,7 +72,7 @@ material materialForPoint(vec3 view, vec3 pos, vec3 dPdx, vec3 dPdy, inout vec3 
 vec3 sunVec() {
     // return normalize(vec3(cos(iTime), 0.6, sin(iTime))); // rotates in a circle in the xz plane; unrealistic
     
-    vec2 circle = vec2(cos(iTime / 8.0), sin(iTime / 8.0)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
+    vec2 circle = vec2(cos(iTime * SUN_SPEED), sin(iTime * SUN_SPEED)) * (1.0 - SUN_OFFSET * SUN_OFFSET);
     vec3 spherePos = vec3(SUN_OFFSET, circle.x, circle.y);
     float a = LATITUDE * TO_RADIANS;
     
