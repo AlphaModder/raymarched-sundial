@@ -44,7 +44,8 @@ float shadow(ray r) {
     for(int i=0; i < MARCH_ITERATIONS; i++)
     {
         float h = mainDistance(r.orig + t * r.dir).dist;
-        
+        if(h < EPSILON) return 0.0;
+
         // in theory this should be 2.0 * ph. 3.0 * ph makes no mathematical sense whatsoever
         // but with 2.0 there are weird artifacts and 3.0 gets rid of them so... whatever
         float y = h*h / (3.0 * ph); 
