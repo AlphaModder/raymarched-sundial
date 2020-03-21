@@ -128,7 +128,7 @@ vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
 vec3 shadeBackground(ray r) {
     vec3 sun = sunVec();
     float sunness = max(0.0, dot(r.dir, sun));
-    float sunFactor = pow(sunness, 256.0) + 0.2 * pow(sunness, 8.0);
+    float sunFactor = pow(sunness, 128.0) + 0.1 * pow(sunness, 32.0);
     return vec3(skyColor(r.dir.y) + SUN_COLOR * sunFactor);
 }
 

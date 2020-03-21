@@ -5,11 +5,13 @@
 
 // CAMERA
 #define ROT_RADIUS 3.0
-#define ROT_SPEED 0.1
+#define ROT_SPEED 0.05
 #define ROT_DIR 1.0
+#define ROT_OFFSET -2.9
+#define ROT iTime * ROT_SPEED + ROT_OFFSET
 
-#define CAMERA_POS vec3(ROT_DIR * ROT_RADIUS * sin(iTime * ROT_SPEED), 0, ROT_RADIUS * cos(iTime * ROT_SPEED))
-#define CAMERA_FACING vec3(ROT_DIR * -sin(iTime * ROT_SPEED), 0, -cos(iTime * ROT_SPEED))
+#define CAMERA_POS vec3(ROT_DIR * ROT_RADIUS * sin(ROT), 0, ROT_RADIUS * cos(ROT))
+#define CAMERA_FACING vec3(ROT_DIR * -sin(ROT), 0, -cos(ROT))
 #define CAMERA_UP vec3(0, 1, 0)
 #define FOV_Y 70.0
 
@@ -17,7 +19,7 @@
 #define LATITUDE -20.0
 #define SUN_OFFSET 0.2
 #define SUN_SPEED 0.125
-#define SUN_COLOR vec3(2.0, 1.6, 1.0)
+#define SUN_COLOR vec3(6.0, 4.8, 3.0)
 #define DAY_SKY_COLOR vec3(0.5, 0.7, 0.9)
 #define NIGHT_SKY_COLOR vec3(0.05, 0.08, 0.15)
 //#define SKY_COLOR vec3(0.5, 0.7, 0.9)
