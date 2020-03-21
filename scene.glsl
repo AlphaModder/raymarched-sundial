@@ -60,10 +60,8 @@ material materialForPoint(vec3 view, vec3 pos, vec3 dPdx, vec3 dPdy, inout vec3 
         case OBJ_SUNDIAL:
             return material(sampleTriplanar(iChannel1, pos, dPdx, dPdy, normal, 1.0).rgb, 0.4, 0.6, 128.0);
         case OBJ_PYRAMID:
-        	color = sampleBrickBiplanar(pos, normal, 1.0).rgb;
-        	float bumpFactor = smoothstep(0.0, 1.0, 1.0 - dot(color, color));
-        	vec2 uv = (transpose(rotateAround(normal)) * pos).xy;
-        	normal = rotateAround(normal) * mix(vec3(0, 0, 1), abs(vec3(gradNoise(uv), 0.0)), bumpFactor);
+            color = sampleBrickBiplanar(pos, normal, 1.0).rgb;
+            normal = sampleBrickNormal(pos, normal);
             return material(color, 0.1, 0.05, 2.0);
         default:
             return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
