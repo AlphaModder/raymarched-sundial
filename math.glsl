@@ -11,30 +11,6 @@ float random(vec2 seed) {
     return fract(sin(dot(seed.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-float fbm(vec2 pos) {
-    float value = 0.0;
-    float amplitude = 0.5;
-
-    for (int i = 0; i < FBM_OCTAVES; i++) {
-        vec2 tile = floor(pos);
-    	vec2 interp = smoothstep(0.0, 1.0, fract(pos));
-        
-        float a = random(tile);
-        float b = random(tile + vec2(1, 0));
-        float c = random(tile + vec2(0, 1));
-        float d = random(tile + vec2(1, 1));
-        
-        float l = mix(a, b, interp.x);
-        float h = mix(c, d, interp.x);
-        value += amplitude * mix(l, h, interp.y);
-            
-        pos *= 2.0;
-        amplitude *= 0.5;
-    }
-    
-    return value;
-}
-
 // pads a 2x2 matrix with zeroes to make it 3x3.
 mat3x3 pad(mat2x2 mat) {
     return mat3x3(
@@ -107,12 +83,5 @@ vec3 toCylindrical(vec3 euclidean) {
 vec3 fromCylindrical(vec3 cylindrical) {
     // cylindrical.y -= PI;
     return vec3(cylindrical.x * cos(cylindrical.y), cylindrical.z, cylindrical.x * sin(cylindrical.y));
-}
-
-vec2 gradNoise(vec2 pos) {
-    return normalize(vec2(
-        fbm(pos + vec2(EPSILON, 0)) - fbm(pos + vec2(-EPSILON, 0)),
-        fbm(pos + vec2(0, EPSILON)) - fbm(pos + vec2(0, -EPSILON))
-    ));
 }
 
