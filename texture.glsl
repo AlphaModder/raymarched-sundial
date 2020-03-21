@@ -28,21 +28,21 @@ vec4 brickTexture(vec2 uv){
     return (light * grain + brick * (1.0 - grain)) * BRICK_GRAIN + brick * (1.0 - BRICK_GRAIN);
 }
 
+#define OUT_NORM normalize(vec3(0, 0, 1))
+#define UP_NORM normalize(vec3(0, BRICK_EDGE_SLOPE, 1))
+#define LEFT_NORM normalize(vec3(-BRICK_EDGE_SLOPE, 0, 1))
+#define RIGHT_NORM normalize(vec3(BRICK_EDGE_SLOPE, 0, 1))
+#define DOWN_NORM normalize(vec3(0, -BRICK_EDGE_SLOPE, 1))
+
 vec3 brickNormal(vec2 uv) {
     vec2 value = brickValue(uv);
     
-    vec3 norm;
-    if (value.x > BRICK_EDGE_WIDTH && value.x < (1.0 - BRICK_EDGE_WIDTH) 
-        && value.y > BRICK_EDGE_WIDTH && value.y < (1.0 - BRICK_EDGE_WIDTH))
-        norm = normalize(vec3(0, 0, 1)); // OUT
-    else if (value.x > value.y && value.x > (1.0 - value.y))
-        norm = normalize(vec3(BRICK_EDGE_SLOPE, 0, 1)); // RIGHT
-    else if (value.x > value.y && value.x < (1.0 - value.y))
-        norm = normalize(vec3(0, -BRICK_EDGE_SLOPE, 1)); // DOWN
-    else if (value.x < value.y && value.x > (1.0 - value.y))
-        norm = normalize(vec3(0, BRICK_EDGE_SLOPE, 1)); // UP
-    else if (value.x < value.y && value.x < (1.0 - value.y))
-        norm = normalize(vec3(-BRICK_EDGE_SLOPE, 0, 1)); // LEFT
+    bool onEdge = value.x > BRICK_EDGE_WIDTH && value.x < (1.0 - BRICK_EDGE_WIDTH) 
+        && value.y > BRICK_EDGE_WIDTH && value.y < (1.0 - BRICK_EDGE_WIDTH);
+    bool inBack = value.x < value.y;
+    bool inFront = value.x > (1.0 - value.y);
+    
+    vec3 norm = OUT_NORM * float(onEdge) + ((UP_NORM * float(inFront) + LEFT_NORM * float(!inFront)) * float(inBack) + (RIGHT_NORM * float(inFront) + DOWN_NORM * float(!inFront)) * float(!inBack)) * float(!onEdge);
     
     vec2 grain = BRICK_NORM_GRAIN * vec2(random(value.xy) - 0.5, random(value.yx) - 0.5);
     norm = normalize(norm + vec3(grain, 0.0));
