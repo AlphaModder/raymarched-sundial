@@ -1,4 +1,5 @@
 #include "math.glsl"
+// BRICK PARAMS:
 #define BRICK_DIV vec2(1.5, 2)
 #define BRICK_CONTRAST 0.12
 #define BRICK_GRAIN 0.20
@@ -6,6 +7,7 @@
 #define BRICK_EDGE_WIDTH 0.1
 #define BRICK_EDGE_SLOPE 0.2
 
+// coordinates within brick
 vec2 brickValue(vec2 uv) {
     vec2 orinal_uv = uv;
     uv = mod(uv * BRICK_DIV, vec2(1.0));
@@ -14,6 +16,7 @@ vec2 brickValue(vec2 uv) {
     return abs(uv - vec2(0.5));
 }
 
+// procedurally generate brick texture
 vec4 brickTexture(vec2 uv){
     vec4 color = vec4(0.78, 0.65, 0.48, 1.0);
     vec4 diff = vec4(vec3(BRICK_CONTRAST), 1.0);
@@ -34,6 +37,7 @@ vec4 brickTexture(vec2 uv){
 #define RIGHT_NORM normalize(vec3(BRICK_EDGE_SLOPE, 0, 1))
 #define DOWN_NORM normalize(vec3(0, -BRICK_EDGE_SLOPE, 1))
 
+// procedurally generate brick normal texture
 vec3 brickNormal(vec2 uv) {
     vec2 value = brickValue(uv);
     
@@ -49,6 +53,7 @@ vec3 brickNormal(vec2 uv) {
     return norm;
 }
 
+// sample brick texture by position
 vec4 sampleBrickBiplanar(vec3 pos, vec3 normal, float sharpness) {
     mat2x4 planes = mat2x4(
         brickTexture(pos.zy),
@@ -59,6 +64,7 @@ vec4 sampleBrickBiplanar(vec3 pos, vec3 normal, float sharpness) {
     return planes * blend;
 }
 
+// sample brick normal by position
 vec3 sampleBrickNormal(vec3 pos, vec3 normal) {
     return rotateAround(normal) * (abs(normal.z) > abs(normal.x)? brickNormal(pos.xy): brickNormal(pos.zy));
 }

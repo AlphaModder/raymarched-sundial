@@ -4,6 +4,7 @@
 #define HUGE 1000000.0
 #define EPSILON 0.0001
 
+// Pseudorandom number generator:
 // Source: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 float random(vec2 seed) {
     return fract(sin(dot(seed.xy, vec2(12.9898, 78.233))) * 43758.5453);

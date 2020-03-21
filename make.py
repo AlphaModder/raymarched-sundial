@@ -1,6 +1,5 @@
 import sys, re
 
-FILES = ["math.glsl", "render.glsl", "scene.glsl"]
 MAIN = "render.glsl"
 TIGER = "main.glsl"
 
@@ -9,6 +8,7 @@ end_pattern = re.compile(r"^\/\/\/ END ([^\s]*)$")
 include_pattern = re.compile(r"^#include\s*\"([^\"]*)\"$")
 reclude_pattern = re.compile(r"^\/\/\/ (#include\s*\"[^\"]*\")$")
 
+# Join component files into main.glsl
 def cat():
     
     with open(TIGER, "w") as writeFile:
@@ -40,6 +40,7 @@ def cat():
         
         writeFile.writelines(readFiles[MAIN])
 
+# Split main.glsl into component files:
 def uncat():
     
     with open(TIGER) as readFile:
