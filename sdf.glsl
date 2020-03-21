@@ -89,10 +89,8 @@ objdist sdfDesert(vec3 pos, int obj) {
     // objdist pyramidSand = sdfBox(pos - vec3(-16, -1.1, -30), vec3(10.5, 0.3, 10.5);
     
     result = sdfSmoothUnion(result, dunes, 4.0);
-    float a = toCylindrical(pos).y;
-    float sandySmooth = 0.2 + 0.033 * (
-        sin((15.3 * a) - 4.1) + cos((7.08 * a) - 1.4) * sin((13.9 * a) - 3.6) // maybe use an actual noise function instead of this bs
-    );
+    float a = toCylindrical(pos).y + PI;
+    float sandySmooth = 0.2 + 0.06 * (sin(18.0 * a  - 4.1) + sin((10.0 * a) - 7.8) + cos((6.0 * a) - 1.4));
     result = sdfSmoothUnion(result, sundialSand, sandySmooth);
     
     return sdfRound(result, 0.05);

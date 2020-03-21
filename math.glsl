@@ -94,6 +94,10 @@ vec3 light(float r, float g, float b, float intensity) {
     return 3.0 * intensity * vec3(r, g, b) / (r + g + b);
 }
 
+vec3 light(vec3 color, float intensity) {
+    return light(color.r, color.g, color.b, intensity);
+}
+
 vec3 toCylindrical(vec3 euclidean) {
     float p = length(euclidean.xz);
     float a = atan(euclidean.z, euclidean.x) /* + PI */;
