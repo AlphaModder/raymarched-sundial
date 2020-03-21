@@ -35,6 +35,8 @@ hit raymarch(ray r) {
 
 // march a ray through the scene, returning a shadow factor based on whether it hits an obstacle
 float shadow(ray r) {
+    // if(sunVec().y < 0.0) { return 0.0; }
+    
     float res = 1.0;
     float t = MIN_DIST;
     float ph = HUGE;
@@ -86,6 +88,15 @@ vec3 worldNormal(vec3 pos) {
     return normalize(normal);
 }
 
+vec3 skyBaseColor(float sunAltitude) {
+    return mix(NIGHT_SKY_COLOR, DAY_SKY_COLOR, clamp((sunAltitude + 0.25) / 0.5, 0.0, 1.0));
+}
+
+vec3 skyColor(float altitude) {
+    vec3 toSun = sunVec();
+    return skyBaseColor(toSun.y) + 0.5 * texture(iChannel3, vec2(0.5 - (toSun.y) / 0.5, altitude / 0.25)).rgb;
+}
+
 vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     vec3 toSun = sunVec();
     ray shadowRay = ray(pos + 0.01 * normal, toSun); // TODO: pos + length(pos) * a * normal?
@@ -93,7 +104,7 @@ vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     
     vec3 incoming = SUNLIGHT * shadowFactor;
     
-    vec3 ambient = AMBIENT * ao(pos, normal, 1.0, 1.2);
+    vec3 ambient = 0.2 * skyBaseColor(toSun.y) * ao(pos, normal, 1.0, 1.2);
     vec3 diffuse = incoming * max(0.0, dot(normal, toSun));
     vec3 specular = mat.specular * incoming * pow(max(0.0, dot(normal, normalize(view + toSun))), mat.alpha);
     
@@ -112,24 +123,12 @@ vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
     return directLighting(mat, toCamera, pos, normal);
 }
 
-// Calculate sky color based on sun height
-vec3 skyColor(float altitude) {
-    if (altitude > 0.25) {
-     	return DAY_SKY_COLOR;   
-    }
-    if (altitude < -0.25) {
-    	return NIGHT_SKY_COLOR;
-    }
-    altitude = (altitude + 0.25) * 2.0;
-    return (altitude) * DAY_SKY_COLOR + (1.0 - altitude) * NIGHT_SKY_COLOR;
-}
-
 // shade rays that never hit an object
 vec3 shadeBackground(ray r) {
     vec3 sun = sunVec();
     float sunness = max(0.0, dot(r.dir, sun));
-    float sunFactor = pow(sunness, 256.0) + 0.2 * pow(sunness, 4.0);
-    return vec3(skyColor(sun.y) + SUN_COLOR * sunFactor);
+    float sunFactor = pow(sunness, 256.0) + 0.2 * pow(sunness, 8.0);
+    return vec3(skyColor(r.dir.y) + SUN_COLOR * sunFactor);
 }
 
 // calculate the worldspace ray through a pixel in screenspace
