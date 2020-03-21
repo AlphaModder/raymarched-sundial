@@ -9,6 +9,7 @@
 #include "material.glsl"
 #include "scene.glsl"
 
+// represents a ray in the scene
 struct ray {
     vec3 orig;
     vec3 dir;
@@ -34,9 +35,9 @@ hit raymarch(ray r) {
 }
 
 // march a ray through the scene, returning a shadow factor based on whether it hits an obstacle
+// implements the "improved" algorithm explained here: https://www.iquilezles.org/www/articles/rmshadows/rmshadows.htm
+// which estimates the closest point based on the two most recent raycast iterations.
 float shadow(ray r) {
-    // if(sunVec().y < 0.0) { return 0.0; }
-    
     float res = 1.0;
     float t = MIN_DIST;
     float ph = HUGE;
@@ -58,6 +59,8 @@ float shadow(ray r) {
     return res;
 }
 
+// compute ambient occlusion by sampling randomly in a hemisphere around the surface normal
+// the closer these points are to objects, the more occlusion there should be
 float ao(vec3 pos, vec3 normal, float maxDist, float falloff) {
     float ao = 0.0;
     for(int i = 0; i < AO_SAMPLES; ++i) {
@@ -68,7 +71,11 @@ float ao(vec3 pos, vec3 normal, float maxDist, float falloff) {
     return clamp(1.0 - ao / float(AO_SAMPLES), 0.0, 1.0);
 }
 
-// find the normal at a hit position, see http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
+// a zero that isn't known to be zero at compile-time, used in worldNormal
+#define ZERO min(iFrame,0) 
+
+// find the normal at a hit position by computing the gradient of the distance field
+// at that point, see http://iquilezles.org/www/articles/normalsSDF/normalsSDF.htm
 vec3 worldNormal(vec3 pos) {
     /*
     float h = EPSILON; // todo: adapt to distance?
@@ -79,7 +86,7 @@ vec3 worldNormal(vec3 pos) {
                       k.xxx*f( p + k.xxx*h ) );
     */
     
-    // we have to do this to prevent inlining of mainDistance. But what the fuck is 0.5773?
+    // we have to do this to prevent inlining of mainDistance. But what in the world is 0.5773?
     vec3 normal = vec3(0.0);
     for(int i = ZERO; i < 4; ++i) {
         vec3 e = 0.5773*(2.0*vec3((((i+3)>>1)&1),((i>>1)&1),(i&1))-1.0);
@@ -89,15 +96,19 @@ vec3 worldNormal(vec3 pos) {
     return normalize(normal);
 }
 
+// the main color of the sky, as well as the ambient light when the sun is at a given height
 vec3 skyBaseColor(float sunAltitude) {
     return mix(NIGHT_SKY_COLOR, DAY_SKY_COLOR, clamp((sunAltitude + 0.25) / 0.5, 0.0, 1.0));
 }
 
+// computes the color of the sky based on pixel altitude by summing skyBaseColor and
+// a sample from the horizon texture (iChannel3). Used to create the horizon glow and sunset.
 vec3 skyColor(float altitude) {
     vec3 toSun = sunVec();
     return skyBaseColor(toSun.y) + 0.5 * texture(iChannel3, vec2(0.5 - (toSun.y) / 0.5, altitude / 0.25)).rgb;
 }
 
+// naive phong shading, could be swapped out for something more physically-based
 vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     vec3 toSun = sunVec();
     ray shadowRay = ray(pos + 0.01 * normal, toSun); // TODO: pos + length(pos) * a * normal?
@@ -112,6 +123,7 @@ vec3 directLighting(material mat, vec3 view, vec3 pos, vec3 normal) {
     return (ambient + diffuse + specular) * mat.color;
 }
 
+// shade rays that hit an object
 vec3 shadeHit(ray r, vec3 rdx, vec3 rdy, hit h) {
     vec3 toCamera = -r.dir;
     vec3 pos = r.orig + r.dir * h.t;

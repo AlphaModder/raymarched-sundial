@@ -22,11 +22,9 @@
 #define SUN_COLOR vec3(6.0, 4.8, 3.0)
 #define DAY_SKY_COLOR vec3(0.5, 0.7, 0.9)
 #define NIGHT_SKY_COLOR vec3(0.05, 0.08, 0.15)
-//#define SKY_COLOR vec3(0.5, 0.7, 0.9)
 
 // ENVIRONMENT: LIGHTING
 #define SUNLIGHT light(0.7, 0.7, 0.6, 1.5)
-#define AMBIENT light(0.5, 0.7, 0.9, 0.2)
 #define SHADOW_SOFTNESS 16.0
 
 // SCENE: OBJECTS
@@ -58,20 +56,21 @@ material materialForPoint(vec3 view, vec3 pos, vec3 dPdx, vec3 dPdy, inout vec3 
     switch(obj) {
         case OBJ_DESERT:
             normal = decodeNormal(sampleTriplanar(iChannel2, pos, dPdx, dPdy, normal, 1.0).xyz, normal);
-            return material(sampleTriplanar(iChannel0, pos, dPdx, dPdy, normal, 1.0).rgb, 0.9, 0.1, 4.0);
+            return material(sampleTriplanar(iChannel0, pos, dPdx, dPdy, normal, 1.0).rgb, 0.1, 4.0);
         case OBJ_SUNDIAL:
-            return material(sampleTriplanar(iChannel1, pos, dPdx, dPdy, normal, 1.0).rgb, 0.4, 0.6, 128.0);
+            return material(sampleTriplanar(iChannel1, pos, dPdx, dPdy, normal, 1.0).rgb, 0.6, 128.0);
         case OBJ_PYRAMID:
             color = sampleBrickBiplanar(pos, normal, 1.0).rgb;
             normal = sampleBrickNormal(pos, normal);
-            return material(color, 0.1, 0.05, 2.0);
+            return material(color, 0.05, 2.0);
         default:
-            return material(vec3(0.5, 0.0, 0.5), 1.0, 0.0, 0.0);
+            return material(vec3(0.5, 0.0, 0.5), 0.0, 0.0);
     }
 }
 
 // the unit vector pointing towards the sun
 vec3 sunVec() {
+    // uncomment this for a plain rotating sun, for testing
     // return normalize(vec3(cos(iTime), 0.6, sin(iTime))); // rotates in a circle in the xz plane; unrealistic
     
     vec2 circle = vec2(cos(iTime * SUN_SPEED), sin(iTime * SUN_SPEED)) * (1.0 - SUN_OFFSET * SUN_OFFSET);

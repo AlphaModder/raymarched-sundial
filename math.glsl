@@ -3,8 +3,6 @@
 #define TO_RADIANS (PI/180.0)
 #define HUGE 1000000.0
 #define EPSILON 0.0001
-#define ZERO min(iFrame,0)
-#define FBM_OCTAVES 6
 
 // Source: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 float random(vec2 seed) {
@@ -20,10 +18,6 @@ mat3x3 pad(mat2x2 mat) {
     );
 }
 
-float norm2(vec3 vec) {
-    return dot(vec, vec);
-}
-
 // gives a rotation matrix transforming +Z onto normal
 // see https://math.stackexchange.com/questions/61547/rotation-of-a-vector-distribution-to-align-with-a-normal-vector
 mat3x3 rotateAround(vec3 normal) {
@@ -35,6 +29,7 @@ mat3x3 rotateAround(vec3 normal) {
     );
 }
 
+// decodes a normal from a normal map into worldspace
 vec3 decodeNormal(vec3 fromTex, vec3 surfaceNormal) {
     vec3 tangentSpace = (2.0 * fromTex - 1.0) * vec3(-1, 1, 1);
     return rotateAround(surfaceNormal) * tangentSpace;
@@ -54,6 +49,8 @@ vec3 sampleCone(float coneAngle, vec2 seed) {
     return normalize(vec3(disk, 1.0));
 }
 
+// used for triplanar mapping, effectively projects a texture onto an object from
+// each of the axes and blends between them.
 vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 dPdx, vec3 dPdy, vec3 normal, float sharpness) {
     mat3x4 planes = mat3x4(
         textureGrad(map, pos.yz, dPdx.yz, dPdy.yz),
@@ -66,20 +63,24 @@ vec4 sampleTriplanar(sampler2D map, vec3 pos, vec3 dPdx, vec3 dPdy, vec3 normal,
     return planes * blend;
 }
 
+// utility for controlling the intensity of a light
 vec3 light(float r, float g, float b, float intensity) {
     return 3.0 * intensity * vec3(r, g, b) / (r + g + b);
 }
 
+// utility for controlling the intensity of a light
 vec3 light(vec3 color, float intensity) {
     return light(color.r, color.g, color.b, intensity);
 }
 
+// euclidean to cylindrical coordinates
 vec3 toCylindrical(vec3 euclidean) {
     float p = length(euclidean.xz);
     float a = atan(euclidean.z, euclidean.x) /* + PI */;
     return vec3(p, a, euclidean.y);
 }
 
+// cylindrical to euclidean coordinates
 vec3 fromCylindrical(vec3 cylindrical) {
     // cylindrical.y -= PI;
     return vec3(cylindrical.x * cos(cylindrical.y), cylindrical.z, cylindrical.x * sin(cylindrical.y));
